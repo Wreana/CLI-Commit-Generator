@@ -4,7 +4,7 @@ CLI for generating Conventional Commit messages from staged Git changes with Oll
 
 ## Requirements
 
-- Node.js 18.18 or newer
+- Node.js 20 or newer (tested on 20, 22, 24 and 26)
 - Git
 - Ollama running at `http://127.0.0.1:11434`
 

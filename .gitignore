@@ -20,6 +20,9 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# Local Node version pins (asdf/mise per-machine)
+.tool-versions
+
 # Build outputs
 dist/
 build/

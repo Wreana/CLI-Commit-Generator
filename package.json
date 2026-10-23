@@ -13,7 +13,7 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=18.18"
+    "node": ">=20"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -27,7 +27,8 @@
     "simple-git": "^3.28.0"
   },
   "devDependencies": {
-    "@types/node": "22.x",
+    "@types/inquirer": "^9.0.10",
+    "@types/node": "20.x",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
     "eslint": "^9.32.0",
