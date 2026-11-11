@@ -35,10 +35,9 @@ cgm --print
 cgm --yes
 ```
 
-Environment variables:
+Environment variables for optional settings:
 
 ```sh
-OPENROUTER_API_KEY=your-key cgm
 CGM_OPENROUTER_MODEL=cohere/north-mini-code:free cgm
 CGM_MAX_DIFF_BYTES=200000 cgm
 ```
@@ -49,7 +48,9 @@ You can save or replace the shared API key with:
 cgm set api "your-key"
 ```
 
-This writes `OPENROUTER_API_KEY` to `~/.config/commit-generator/.env`, so it works from any project. The file is created with user only permissions.
+This updates the hardcoded `OPENROUTER_API_KEY` value in the ignored
+`src/local-config.ts`, runs
+`npm run check`, and reinstalls the updated CLI globally.
 
 Default model: `cohere/north-mini-code:free`.
 Default detailed diff limit: `120000` bytes. Generated lockfile diffs are summarized instead of sent in full.
@@ -88,26 +89,9 @@ The recommended method is the built in configuration command:
 cgm set api "sk-or-v1-your-key"
 ```
 
-This saves the key as `OPENROUTER_API_KEY` in
-`~/.config/commit-generator/.env`, with permissions for your user only. The
-key is then available to `cgm` from any project.
-
-You can also provide the key for one command without saving it:
-
-```sh
-OPENROUTER_API_KEY="sk-or-v1-your-key" cgm
-```
-
-Or export it for the rest of your current shell session:
-
-```sh
-export OPENROUTER_API_KEY="sk-or-v1-your-key"
-cgm
-```
-
-Never commit the key to Git or put it in a public issue, screenshot, shell
-history, or source file. If it is exposed, revoke it from OpenRouter and
-create a replacement.
+This updates the hardcoded `OPENROUTER_API_KEY` value in the ignored
+`src/local-config.ts`, then runs the checks and reinstalls the global package
+automatically. Keep the local file private and revoke the key if it is exposed.
 
 ### 3. Verify the setup
 
@@ -119,12 +103,11 @@ cgm --print
 ```
 
 The command should print one Conventional Commit message generated from the
-staged diff. If it reports that the API key is missing, confirm that the key
-was saved with `cgm set api` or that `OPENROUTER_API_KEY` is exported in the
-same shell where you run `cgm`.
+staged diff. If it reports that the API key is missing, run `cgm set api
+"sk-or-v1-your-key"` again and allow the check and global reinstall to finish.
 
 ### OpenAI Platform keys
-
+s
 An OpenAI Platform key usually starts with `sk-`, while an OpenRouter key
 usually starts with `sk-or-v1-`. This project defaults to OpenRouter and sends
 requests to `https://openrouter.ai/api/v1`, so an OpenAI Platform key will not
@@ -133,7 +116,7 @@ work with the default configuration. Use an OpenRouter key for the setup above.
 ## Development
 
 ```sh
-OPENROUTER_API_KEY=your-key npm run dev -- --print
+npm run dev -- --print
 npm run lint
 npm run build
 npm run check
@@ -144,7 +127,7 @@ npm run check
 Set your API key before running the CLI:
 
 ```sh
-export OPENROUTER_API_KEY=your-key
+cgm set api "sk-or-v1-your-key"
 cgm
 ```
 

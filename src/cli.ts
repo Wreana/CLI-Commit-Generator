@@ -36,9 +36,9 @@ program
   .command("api <apiKey>")
   .description("Save or replace the shared OpenRouter API key")
   .action((apiKey: string) => {
-    const envPath = saveApiKey(apiKey);
+    saveApiKey(apiKey);
     commandHandled = true;
-    console.log(`OpenRouter API key saved to ${envPath}.`);
+    console.log("OpenRouter API key updated and CLI reinstalled globally.");
   });
 
 try {
@@ -59,7 +59,7 @@ async function run(options: CliOptions): Promise<void> {
     return;
   }
 
-  const config = readConfig(options);
+  const config = readConfig();
   console.log(`Generating commit message with ${config.model}...`);
 
   const suggestion = await generateCommitMessage({

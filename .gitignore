@@ -20,6 +20,9 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# Local OpenRouter key
+src/local-config.ts
+
 # Local Node version pins (asdf/mise per-machine)
 .tool-versions
 
