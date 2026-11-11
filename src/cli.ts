@@ -2,15 +2,15 @@
 import { createInterface } from "node:readline/promises";
 import { Command } from "commander";
 import inquirer from "inquirer";
-import { readConfig } from "./config.js";
+import { readConfig, saveApiKey } from "./config.js";
 import { commit, getStagedChanges } from "./git.js";
-import { generateCommitMessage } from "./ollama.js";
+import { generateCommitMessage } from "./openrouter.js";
 import { buildCommitPrompt } from "./prompt.js";
 
 const DEFAULT_MAX_DIFF_BYTES = 120_000;
 
 interface CliOptions {
-  host?: string;
+  baseUrl?: string;
   model?: string;
   yes?: boolean;
   print?: boolean;
@@ -18,19 +18,34 @@ interface CliOptions {
 
 const program = new Command()
   .name("cgm")
-  .description("Generate a Conventional Commit message from staged Git changes.")
-  .option("-m, --model <name>", "Ollama model name")
-  .option("--host <url>", "Ollama host URL")
+  .description(
+    "Generate a Conventional Commit message from staged Git changes.",
+  )
+  .option("-m, --model <name>", "OpenRouter model name")
+  .option("--base-url <url>", "OpenRouter API base URL")
   .option("-y, --yes", "commit with the generated message without prompting")
   .option("--print", "print the generated message without committing")
-  .showHelpAfterError();
+  .showHelpAfterError()
+  .action(() => undefined);
 
-program.parse();
+let commandHandled = false;
 
-const options = program.opts<CliOptions>();
+program
+  .command("set")
+  .description("Save CLI settings")
+  .command("api <apiKey>")
+  .description("Save or replace the shared OpenRouter API key")
+  .action((apiKey: string) => {
+    const envPath = saveApiKey(apiKey);
+    commandHandled = true;
+    console.log(`OpenRouter API key saved to ${envPath}.`);
+  });
 
 try {
-  await run(options);
+  await program.parseAsync();
+  if (!commandHandled) {
+    await run(program.opts<CliOptions>());
+  }
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
   console.error(`Error: ${message}`);
@@ -48,7 +63,8 @@ async function run(options: CliOptions): Promise<void> {
   console.log(`Generating commit message with ${config.model}...`);
 
   const suggestion = await generateCommitMessage({
-    host: config.host,
+    baseUrl: config.baseUrl,
+    apiKey: config.apiKey,
     model: config.model,
     prompt: buildCommitPrompt(changes.summary, truncateDiff(changes.diff)),
   });
@@ -69,8 +85,13 @@ async function run(options: CliOptions): Promise<void> {
 }
 
 function truncateDiff(diff: string): string {
-  const maxBytes = Number(process.env.CGM_MAX_DIFF_BYTES ?? DEFAULT_MAX_DIFF_BYTES);
-  const limit = Number.isFinite(maxBytes) && maxBytes > 0 ? maxBytes : DEFAULT_MAX_DIFF_BYTES;
+  const maxBytes = Number(
+    process.env.CGM_MAX_DIFF_BYTES ?? DEFAULT_MAX_DIFF_BYTES,
+  );
+  const limit =
+    Number.isFinite(maxBytes) && maxBytes > 0
+      ? maxBytes
+      : DEFAULT_MAX_DIFF_BYTES;
   const bytes = Buffer.byteLength(diff);
 
   if (bytes <= limit) {
@@ -147,7 +168,10 @@ function formatCommitMessage({ type, scope, summary }: CommitParts): string {
   return `${type}: ${summary}`;
 }
 
-async function promptRequiredEditableLine(label: string, defaultValue: string): Promise<string> {
+async function promptRequiredEditableLine(
+  label: string,
+  defaultValue: string,
+): Promise<string> {
   while (true) {
     const answer = await promptEditableLine(label, defaultValue);
 
@@ -159,7 +183,10 @@ async function promptRequiredEditableLine(label: string, defaultValue: string): 
   }
 }
 
-async function promptEditableLine(label: string, defaultValue: string): Promise<string> {
+async function promptEditableLine(
+  label: string,
+  defaultValue: string,
+): Promise<string> {
   const rl = createInterface({
     input: process.stdin,
     output: process.stdout,
